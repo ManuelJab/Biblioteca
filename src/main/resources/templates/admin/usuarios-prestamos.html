@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios y Prestamos - Biblioteca Digital</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+
+    <!-- Anime.js y Three.js para animaciones -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <!-- Header profesional -->
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-users-cog"></i> Gesti&oacute;n de Usuarios</h1>
+            <div class="header-actions">
+                <a th:href="@{/admin/dashboard}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesi&oacute;n
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats Summary -->
+        <div class="stats-grid">
+            <div class="stat-card stagger-load">
+                <div class="stat-value" th:text="${#lists.size(usuarios)}">0</div>
+                <div class="stat-label"><i class="fas fa-users"></i> Usuarios Registrados</div>
+            </div>
+            <div class="stat-card stagger-load" style="border-left-color: var(--success-color);">
+                <div class="stat-value" style="color: var(--success-color);" th:text="${#lists.size(prestamos)}">0</div>
+                <div class="stat-label"><i class="fas fa-clipboard-check"></i> Pr&eacute;stamos Activos</div>
+            </div>
+        </div>
+
+        <!-- Usuarios Registrados -->
+        <div class="card stagger-load">
+            <div class="card-header">
+                <h2><i class="fas fa-users"></i> Usuarios Registrados</h2>
+            </div>
+
+            <div th:if="${#lists.isEmpty(usuarios)}" class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-user-slash"></i></div>
+                <h3>No hay usuarios registrados</h3>
+            </div>
+
+            <div class="table-container" th:if="${!#lists.isEmpty(usuarios)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre de Usuario</th>
+                            <th>Rol</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="usuario : ${usuarios}">
+                            <td th:text="${usuario.id}"></td>
+                            <td th:text="${usuario.username}" style="font-weight: 500;"></td>
+                            <td>
+                                <span class="badge"
+                                    th:classappend="${#lists.contains(usuario.roles, 'ROLE_ADMIN')} ? 'badge-active' : ''"
+                                    style="background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
+                                    <i class="fas fa-user-tag"></i> <span
+                                        th:text="${#lists.contains(usuario.roles, 'ROLE_ADMIN') ? 'ADMINISTRADOR' : 'USUARIO'}"></span>
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-primary" th:data-id="${usuario.id}"
+                                    th:data-username="${usuario.username}"
+                                    th:data-rol="${#lists.contains(usuario.roles, 'ROLE_ADMIN') ? 'ROLE_ADMIN' : 'ROLE_USER'}"
+                                    th:data-is-self="${usuario.username == #authentication.name}"
+                                    onclick="openUserEditModal(this)"
+                                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Prestamos Activos -->
+        <div class="card stagger-load">
+            <div class="card-header">
+                <h2><i class="fas fa-clipboard-list"></i> Pr&eacute;stamos Activos</h2>
+            </div>
+
+            <div th:if="${#lists.isEmpty(prestamos)}" class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-clipboard-check"></i></div>
+                <h3>No hay pr&eacute;stamos activos</h3>
+                <p>Los pr&eacute;stamos solicitados por usuarios aparecer&aacute;n aqu&iacute;</p>
+            </div>
+
+            <div class="table-container" th:if="${!#lists.isEmpty(prestamos)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Pr&eacute;stamo</th>
+                            <th>Usuario</th>
+                            <th>Libro</th>
+                            <th>Fecha Pr&eacute;stamo</th>
+                            <th>Fecha Devoluci&oacute;n</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="prestamo : ${prestamos}">
+                            <td th:text="${prestamo.id}"></td>
+                            <td th:text="${prestamo.usuario.username}"></td>
+                            <td th:text="${prestamo.libro.titulo}" style="font-style: italic;"></td>
+                            <td th:text="${#temporals.format(prestamo.fechaPrestamo, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(prestamo.fechaDevolucion, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <span class="badge badge-active" th:text="${prestamo.estado}"></span>
+                            </td>
+                            <td>
+                                <form th:if="${prestamo.estado == 'ACTIVO'}"
+                                    th:action="@{/admin/prestamos/devolver/{id}(id=${prestamo.id})}" method="post">
+                                    <button type="submit" class="btn btn-primary"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background-color: var(--success-color); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">
+                                        <i class="fas fa-undo"></i> Devolver
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventana modal de edicion de usuario -->
+    <div id="userEditModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Editar Usuario</h3>
+                <button class="modal-close" onclick="closeUserEditModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="userEditForm" method="post" action="">
+                <div class="modal-body">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div
+                            style="width: 80px; height: 80px; background: #e0f2fe; color: #0369a1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2rem;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editUsername"><i class="fas fa-user"></i> Nombre de Usuario</label>
+                        <input type="text" id="editUsername" name="username" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editPassword"><i class="fas fa-key"></i> Nueva Contraseña (Opcional)</label>
+                        <input type="password" id="editPassword" name="nuevaPassword" class="form-control"
+                            placeholder="Dejar en blanco para no cambiar">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editRol"><i class="fas fa-user-tag"></i> Rol</label>
+                        <select id="editRol" name="rol" class="form-control">
+                            <option value="ROLE_USER">USUARIO</option>
+                            <option value="ROLE_ADMIN">ADMINISTRADOR</option>
+                        </select>
+                        <small id="roleWarning"
+                            style="display:none; color: #e67e22; margin-top: 5px; font-weight: 500;">
+                            <i class="fas fa-exclamation-triangle"></i> No puedes modificar tu propio rol.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="closeUserEditModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/js/background-3d.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Efecto scroll encabezado
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('.header');
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+
+            // Animacion escalonada para tarjetas
+            anime({
+                targets: '.stagger-load',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(50),
+                easing: 'easeOutCubic',
+                duration: 500
+            });
+
+            // Verificar mensajes de actualizacion
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('usuarioActualizado')) {
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Éxito', 'Usuario actualizado correctamente');
+                }
+                // Limpiar URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+
+        // Logica del modal de edicion de usuario
+        const modal = document.getElementById('userEditModal');
+        const form = document.getElementById('userEditForm');
+
+        function openUserEditModal(btn) {
+            const id = btn.getAttribute('data-id');
+            const username = btn.getAttribute('data-username');
+            const rol = btn.getAttribute('data-rol');
+            const isSelf = btn.getAttribute('data-is-self') === 'true';
+
+            // Start fresh
+            form.reset();
+
+            // Populate fields
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editRol').value = rol;
+
+            // Handle role blocking
+            const roleSelect = document.getElementById('editRol');
+            const roleWarning = document.getElementById('roleWarning');
+
+            if (isSelf) {
+                roleSelect.disabled = true;
+                roleWarning.style.display = 'block';
+            } else {
+                roleSelect.disabled = false;
+                roleWarning.style.display = 'none';
+            }
+
+            // Set form action
+            form.action = '/admin/usuarios/editar/' + id;
+
+            // Show modal
+            modal.classList.add('active');
+
+            anime({
+                targets: '#userEditModal .modal',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                translateY: [20, 0],
+                easing: 'easeOutElastic(1, .6)',
+                duration: 600
+            });
+        }
+
+        function closeUserEditModal() {
+            modal.classList.remove('active');
+        }
+
+        // Cerrar al hacer clic fuera
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeUserEditModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

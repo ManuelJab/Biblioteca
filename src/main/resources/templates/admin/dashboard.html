@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Biblioteca Digital</title>
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+
+    <!-- Anime.js libreria de animacion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- Libreria Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <!-- Header profesional -->
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-book-reader"></i> Panel de Administrador</h1>
+            <div class="header-actions">
+                <a th:href="@{/admin/usuarios-prestamos}" class="btn btn-primary">
+                    <i class="fas fa-users"></i> Usuarios y Pr&eacute;stamos
+                </a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesi&oacute;n
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Estadisticas rapidas -->
+        <div class="stats-grid">
+            <div class="stat-card stagger-load">
+                <div class="stat-value" th:text="${#lists.size(libros)}">0</div>
+                <div class="stat-label"><i class="fas fa-book"></i> Total de Libros</div>
+            </div>
+            <div class="stat-card stagger-load" style="border-left-color: var(--success-color);">
+                <div class="stat-value" style="color: var(--success-color);" th:text="${#lists.size(prestamos)}">0</div>
+                <div class="stat-label"><i class="fas fa-clipboard-check"></i> Pr&eacute;stamos Activos</div>
+            </div>
+            <div class="stat-card stagger-load" style="border-left-color: var(--warning-color);">
+                <div class="stat-value" style="color: var(--warning-color);">
+                    <span th:text="${#aggregates.sum(libros.![ejemplaresDisponibles])}">0</span>
+                </div>
+                <div class="stat-label"><i class="fas fa-layer-group"></i> Ejemplares Disponibles</div>
+            </div>
+        </div>
+
+        <!-- Gestion de Libros -->
+        <div class="card stagger-load">
+            <div class="card-header">
+                <h2><i class="fas fa-book"></i> Gesti&oacute;n de Libros</h2>
+                <button class="btn btn-success" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i> Agregar Nuevo Libro
+                </button>
+            </div>
+
+            <div th:if="${#lists.isEmpty(libros)}" class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-book"></i></div>
+                <h3>No hay libros registrados</h3>
+                <p>Comienza agregando tu primer libro al cat&aacute;logo</p>
+                <button class="btn btn-success" onclick="openCreateModal()">Agregar Libro</button>
+            </div>
+
+            <div class="table-container" th:if="${!#lists.isEmpty(libros)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Portada</th>
+                            <th>T&iacute;tulo</th>
+                            <th>Autor</th>
+                            <th>ISBN</th>
+                            <th>Disponibles</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="libro : ${libros}">
+                            <td th:text="${libro.id}"></td>
+                            <td>
+                                <img th:if="${libro.imagenUrl != null and !libro.imagenUrl.isEmpty()}"
+                                    th:src="@{${libro.imagenUrl}}" alt="Portada"
+                                    style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div th:if="${libro.imagenUrl == null or libro.imagenUrl.isEmpty()}"
+                                    style="width: 50px; height: 75px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #aaa;">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </td>
+                            <td th:text="${libro.titulo}"></td>
+                            <td th:text="${libro.autor}"></td>
+                            <td th:text="${libro.isbn}"></td>
+                            <td>
+                                <span class="badge badge-active" th:text="${libro.ejemplaresDisponibles}"></span>
+                            </td>
+                            <td>
+                                <!-- El boton de editar abre la ventana modal -->
+                                <button class="btn btn-secondary action-btn" th:data-id="${libro.id}"
+                                    th:data-titulo="${libro.titulo}" th:data-autor="${libro.autor}"
+                                    th:data-isbn="${libro.isbn}" th:data-ejemplares="${libro.ejemplaresDisponibles}"
+                                    th:data-imagen="${libro.imagenUrl}" th:data-pdf="${libro.pdfUrl}"
+                                    onclick="openEditModal(this)">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+
+                                <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                                    th:data-id="${libro.id}" onclick="openDeleteModal(this.getAttribute('data-id'))">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Prestamos Activos -->
+        <div class="card stagger-load">
+            <div class="card-header">
+                <h2><i class="fas fa-clipboard-list"></i> Pr&eacute;stamos Activos</h2>
+            </div>
+
+            <div th:if="${#lists.isEmpty(prestamos)}" class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-clipboard-check"></i></div>
+                <h3>No hay pr&eacute;stamos activos</h3>
+                <p>Los pr&eacute;stamos solicitados por usuarios aparecer&aacute;n aqu&iacute;</p>
+            </div>
+
+            <div class="table-container" th:if="${!#lists.isEmpty(prestamos)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Libro</th>
+                            <th>Fecha Pr&eacute;stamo</th>
+                            <th>Fecha Devoluci&oacute;n</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="prestamo : ${prestamos}">
+                            <td th:text="${prestamo.id}"></td>
+                            <td th:text="${prestamo.usuario.username}"></td>
+                            <td th:text="${prestamo.libro.titulo}"></td>
+                            <td th:text="${#temporals.format(prestamo.fechaPrestamo, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(prestamo.fechaDevolucion, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <span class="badge badge-active" th:text="${prestamo.estado}"></span>
+                            </td>
+                            <td>
+                                <form th:if="${prestamo.estado == 'ACTIVO'}"
+                                    th:action="@{/admin/prestamos/devolver/{id}(id=${prestamo.id})}" method="post">
+                                    <button type="submit" class="btn btn-primary"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background-color: var(--success-color); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">
+                                        <i class="fas fa-undo"></i> Devolver
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventana modal de edicion -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar Libro</h3>
+                <button class="modal-close" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editForm" method="post" th:action="@{/admin/libros/editar}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img id="editImagePreview" src="" alt="Portada actual"
+                            style="max-height: 200px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none;">
+                    </div>
+                    <input type="hidden" id="editId" name="id">
+
+                    <div class="form-group">
+                        <label for="editTitulo">T&iacute;tulo del Libro</label>
+                        <input type="text" id="editTitulo" name="titulo" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editAutor">Autor</label>
+                        <input type="text" id="editAutor" name="autor" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editIsbn">ISBN</label>
+                        <input type="text" id="editIsbn" name="isbn" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editEjemplares">Ejemplares Disponibles</label>
+                        <input type="number" id="editEjemplares" name="ejemplaresDisponibles" class="form-control"
+                            min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editImagenFile">Actualizar Portada (Opcional)</label>
+                        <input type="file" id="editImagenFile" name="imagenFile" class="form-control" accept="image/*">
+                        <small id="currentImageName"
+                            style="display:block; margin-top:5px; color:#4a5568; font-style: italic;"></small>
+                        <small style="color: #666;">Deja vac&iacute;o para mantener la actual.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editPdfFile">Actualizar PDF (Opcional)</label>
+                        <input type="file" id="editPdfFile" name="pdfFile" class="form-control"
+                            accept="application/pdf">
+                        <small id="currentPdfName"
+                            style="display:block; margin-top:5px; color:#4a5568; font-style: italic;"></small>
+                        <small style="color: #666;">Deja vac&iacute;o para mantener el actual.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ventana modal de creacion -->
+    <div id="createModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Agregar Nuevo Libro</h3>
+                <button class="modal-close" onclick="closeCreateModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form method="post" th:action="@{/admin/libros/nuevo}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="createTitulo">T&iacute;tulo del Libro</label>
+                        <input type="text" id="createTitulo" name="titulo" class="form-control"
+                            placeholder="Ej. El Quijote" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createAutor">Autor</label>
+                        <input type="text" id="createAutor" name="autor" class="form-control"
+                            placeholder="Ej. Miguel de Cervantes" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createIsbn">ISBN</label>
+                        <input type="text" id="createIsbn" name="isbn" class="form-control"
+                            placeholder="Ej. 978-3-16-148410-0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createEjemplares">Ejemplares Disponibles</label>
+                        <input type="number" id="createEjemplares" name="ejemplaresDisponibles" class="form-control"
+                            min="1" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createImagenFile">Imagen de Portada</label>
+                        <input type="file" id="createImagenFile" name="imagenFile" class="form-control"
+                            accept="image/*">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createPdfFile">Archivo PDF</label>
+                        <input type="file" id="createPdfFile" name="pdfFile" class="form-control"
+                            accept="application/pdf">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="closeCreateModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Libro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmacion de eliminacion -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header" style="border-bottom-color: var(--danger-color);">
+                <h3 style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i> Confirmar
+                    Eliminaci&oacute;n</h3>
+                <button class="modal-close" onclick="closeDeleteModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 1.1rem; color: var(--text-main);">¿Est&aacute;s seguro de que deseas eliminar este
+                    libro?</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Esta acci&oacute;n no se
+                    puede deshacer y el libro se eliminar&aacute; permanentemente del cat&aacute;logo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" style="background-color: var(--text-muted); border: none;"
+                    onclick="closeDeleteModal()">Cancelar</button>
+                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">S&iacute;, Eliminar</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts JavaScript -->
+    <!-- Efecto de fondo 3D -->
+    <script th:src="@{/js/background-3d.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+
+    <script>
+        // Logica de la ventana modal
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const titulo = button.getAttribute('data-titulo');
+            const autor = button.getAttribute('data-autor');
+            const isbn = button.getAttribute('data-isbn');
+            const ejemplares = button.getAttribute('data-ejemplares');
+            const imagenUrl = button.getAttribute('data-imagen');
+            const pdfUrl = button.getAttribute('data-pdf');
+
+            // Llenar datos de formulario
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitulo').value = titulo;
+            document.getElementById('editAutor').value = autor;
+            document.getElementById('editIsbn').value = isbn;
+            document.getElementById('editEjemplares').value = ejemplares;
+
+            // Mostrar imagen actual
+            const imgPreview = document.getElementById('editImagePreview');
+            const currentImageName = document.getElementById('currentImageName');
+
+            if (imagenUrl && imagenUrl !== 'null') {
+                imgPreview.src = imagenUrl;
+                imgPreview.style.display = 'inline-block';
+                // Extraer nombre del archivo
+                const imgName = imagenUrl.split('/').pop();
+                currentImageName.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> Archivo actual: ' + imgName;
+            } else {
+                imgPreview.style.display = 'none';
+                currentImageName.innerHTML = '<i class="fas fa-times-circle" style="color: var(--danger-color);"></i> Sin portada asignada';
+            }
+
+            // Mostrar nombre del PDF actual
+            const currentPdfName = document.getElementById('currentPdfName');
+            if (pdfUrl && pdfUrl !== 'null') {
+                const pdfName = pdfUrl.split('/').pop();
+                currentPdfName.innerHTML = '<i class="far fa-file-pdf" style="color: #e74c3c;"></i> Archivo actual: ' + pdfName;
+            } else {
+                currentPdfName.innerHTML = '<i class="fas fa-times-circle" style="color: var(--danger-color);"></i> Sin PDF asignado';
+            }
+
+            // Actualizar URL de accion
+            form.action = '/admin/libros/editar/' + id;
+
+            // Mostrar modal con Anime.js
+            modal.classList.add('active');
+
+            anime({
+                targets: '.modal',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                translateY: [20, 0],
+                easing: 'easeOutElastic(1, .6)',
+                duration: 600
+            });
+        }
+
+        function closeEditModal() {
+            modal.classList.remove('active');
+        }
+
+        // Cerrar al hacer clic fuera
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeEditModal();
+            }
+        });
+
+        // Logica de modal de creacion
+        const createModal = document.getElementById('createModal');
+
+        function openCreateModal() {
+            createModal.classList.add('active');
+
+            anime({
+                targets: '#createModal .modal',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                translateY: [20, 0],
+                easing: 'easeOutElastic(1, .6)',
+                duration: 600
+            });
+        }
+
+        function closeCreateModal() {
+            createModal.classList.remove('active');
+        }
+
+        createModal.addEventListener('click', (e) => {
+            if (e.target === createModal) {
+                closeCreateModal();
+            }
+        });
+
+        // Logica de modal de eliminacion
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+        function openDeleteModal(id) {
+            confirmDeleteBtn.href = '/admin/libros/eliminar/' + id;
+            deleteModal.classList.add('active');
+
+            anime({
+                targets: '#deleteModal .modal',
+                scale: [0.9, 1],
+                opacity: [0, 1],
+                translateY: [20, 0],
+                easing: 'easeOutElastic(1, .6)',
+                duration: 600
+            });
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('active');
+        }
+
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+
+        // Animacion del dashboard con Anime.js
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animacion escalonada para tarjetas
+            anime({
+                targets: '.stagger-load',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(50),
+                easing: 'easeOutCubic',
+                duration: 500
+            });
+
+            // Logica de notificacion de bienvenida
+            const welcomeShown = sessionStorage.getItem('adminWelcomeShown');
+            if (!welcomeShown) {
+                setTimeout(function () {
+                    // Verificar si showToast existe
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'Bienvenido', 'Administracion cargada correctamente');
+                    }
+                    sessionStorage.setItem('adminWelcomeShown', 'true');
+                }, 1000);
+            }
+
+            // Efecto de scroll en encabezado
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('.header');
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat&aacute;logo de Libros - Biblioteca Digital</title>
+
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/usuario.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+
+    <!-- Anime.js y Three.js para animaciones -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <!-- Header profesional -->
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-book-reader"></i> Cat&aacute;logo de Libros</h1>
+            <div class="header-actions">
+                <a th:href="@{/usuario/mis-prestamos}" class="btn btn-primary">
+                    <i class="fas fa-clipboard-list"></i> Mis Pr&eacute;stamos
+                </a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesi&oacute;n
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Seccion de busqueda -->
+        <div class="search-section stagger-load">
+            <h2 class="search-title">Encuentra tu pr&oacute;xima lectura</h2>
+            <form th:action="@{/usuario/buscar}" method="get" class="search-box">
+                <div class="search-wrapper">
+                    <input type="text" name="termino" placeholder="Buscar por t&iacute;tulo, autor o ISBN..." required
+                        autocomplete="off">
+                    <button type="button" class="btn-clear" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button type="submit"><i class="fas fa-search"></i> Buscar</button>
+            </form>
+        </div>
+
+        <!-- Mensajes -->
+        <div th:if="${param.error}" class="message error stagger-load" th:text="${param.error}"></div>
+
+        <!-- Grid de libros -->
+        <div class="books-grid">
+            <div th:each="libro : ${libros}" class="book-card stagger-load">
+                <!-- Portada del libro -->
+                <div class="book-cover">
+                    <img th:if="${libro.imagenUrl != null and !libro.imagenUrl.isEmpty()}"
+                        th:src="@{${libro.imagenUrl}}" alt="Portada"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                    <div th:if="${libro.imagenUrl == null or libro.imagenUrl.isEmpty()}" class="book-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+
+                <!-- Informacion del libro -->
+                <h3 th:text="${libro.titulo}">T&iacute;tulo del Libro</h3>
+
+                <div class="book-info">
+                    <p>
+                        <i class="fas fa-pen-nib"></i> <span th:text="${libro.autor}">Autor</span>
+                    </p>
+                    <p>
+                        <i class="fas fa-barcode"></i> <span th:text="${libro.isbn}">ISBN</span>
+                    </p>
+                </div>
+
+                <!-- Acciones -->
+                <div class="book-actions">
+                    <!-- Estado: Disponible -->
+                    <span
+                        th:if="${libro.ejemplaresDisponibles > 0 and (prestamosIds == null or !#lists.contains(prestamosIds, libro.id))}"
+                        class="status-badge status-available">
+                        <i class="fas fa-check-circle"></i> Disponible
+                    </span>
+
+                    <!-- Estado: Agotado (solo si no lod tengo prestado) -->
+                    <span
+                        th:if="${libro.ejemplaresDisponibles == 0 and (prestamosIds == null or !#lists.contains(prestamosIds, libro.id))}"
+                        class="status-badge status-unavailable">
+                        <i class="fas fa-times-circle"></i> Agotado
+                    </span>
+
+                    <!-- Estado: En Préstamo (si yo lo tengo) -->
+                    <span th:if="${prestamosIds != null and #lists.contains(prestamosIds, libro.id)}"
+                        class="status-badge status-library">
+                        <i class="fas fa-book-reader"></i> En Tu Biblioteca
+                    </span>
+
+                    <!-- Boton: Solicitar (Solo si disponible y NO lo tengo) -->
+                    <form
+                        th:if="${libro.ejemplaresDisponibles > 0 and (prestamosIds == null or !#lists.contains(prestamosIds, libro.id))}"
+                        th:action="@{/usuario/solicitar-prestamo/{id}(id=${libro.id})}" method="post">
+                        <button type="submit" class="btn-book">
+                            Solicitar
+                        </button>
+                    </form>
+
+                    <!-- Boton: No Disponible (Si agotado y NO lo tengo) -->
+                    <button
+                        th:if="${libro.ejemplaresDisponibles == 0 and (prestamosIds == null or !#lists.contains(prestamosIds, libro.id))}"
+                        class="btn-book" disabled>
+                        No Disponible
+                    </button>
+
+                    <!-- Boton: Leer Ahora (Si YA lo tengo) -->
+                    <a th:if="${prestamosIds != null and #lists.contains(prestamosIds, libro.id)}"
+                        th:href="@{/usuario/leer/{id}(id=${libro.id})}" class="btn-book btn-read">
+                        <i class="fas fa-glasses"></i> Leer Ahora
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado vacio -->
+        <div th:if="${#lists.isEmpty(libros)}" class="empty-state stagger-load">
+            <div class="empty-icon"><i class="fas fa-search"></i></div>
+            <h3>No se encontraron libros</h3>
+            <p>Intenta con otra b&uacute;squeda o vuelve m&aacute;s tarde.</p>
+            <a th:href="@{/usuario/catalogo}" class="btn btn-primary" style="margin-top: 1rem;">Ver Todo</a>
+        </div>
+    </div>
+
+    <!-- Scripts JavaScript -->
+    <script th:src="@{/js/background-3d.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Logica de busqueda en tiempo real
+            const searchInput = document.querySelector('input[name="termino"]');
+            const searchButton = document.querySelector('.search-box button[type="submit"]');
+            const bookCards = document.querySelectorAll('.book-card');
+            const emptyState = document.querySelector('.empty-state');
+            const clearBtn = document.querySelector('.btn-clear');
+
+            function filterBooks(searchTerm) {
+                const term = searchTerm.toLowerCase();
+                let visibleCount = 0;
+
+                bookCards.forEach(card => {
+                    const title = card.querySelector('h3').textContent.toLowerCase();
+                    const author = card.querySelector('.book-info p:first-child span').textContent.toLowerCase();
+                    const isbn = card.querySelector('.book-info p:last-child span').textContent.toLowerCase();
+
+                    if (title.includes(term) || author.includes(term) || isbn.includes(term)) {
+                        card.style.display = 'flex';
+                        // Contar visibles
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Mostrar estado vacio si no hay libros
+                if (visibleCount === 0) {
+                    if (emptyState) {
+                        emptyState.style.display = 'block';
+                        const h3 = emptyState.querySelector('h3');
+                        const p = emptyState.querySelector('p');
+                        if (h3) h3.textContent = 'No se encontraron resultados';
+                        if (p) p.textContent = 'Intenta con otro t\u00e9rmino de b\u00fasqueda.';
+
+                        // Ocultar boton ver todo
+                        const viewAllBtn = emptyState.querySelector('.btn-primary');
+                        if (viewAllBtn) viewAllBtn.style.display = 'none';
+                    }
+                } else {
+                    if (emptyState) {
+                        emptyState.style.display = 'none';
+                    }
+                }
+            }
+
+            // Sincronizar visibilidad del boton limpiar
+            if (searchInput.value.length > 0) {
+                clearBtn.style.display = 'flex';
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value;
+                if (term.length > 0) {
+                    clearBtn.style.display = 'flex';
+                } else {
+                    clearBtn.style.display = 'none';
+                }
+                filterBooks(term);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearBtn.style.display = 'none';
+                filterBooks('');
+                searchInput.focus();
+            });
+
+            // Prevenir envio de formulario para mantenerlo del lado del cliente
+            const searchForm = document.querySelector('.search-box');
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                filterBooks(searchInput.value);
+            });
+
+
+            // Animacion
+            anime({
+                targets: '.stagger-load',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(50),
+                easing: 'easeOutCubic',
+                duration: 600
+            });
+
+            // Scroll del encabezado
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('.header');
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+
+            // Logica de notificacion de bienvenida
+            const welcomeShown = sessionStorage.getItem('userWelcomeShown');
+            if (!welcomeShown) {
+                setTimeout(function () {
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'Bienvenido', 'Explora nuestro cat&aacute;logo de libros');
+                    }
+                    sessionStorage.setItem('userWelcomeShown', 'true');
+                }, 800);
+            }
+        });
+    </script>
+</body>
+
+</html>

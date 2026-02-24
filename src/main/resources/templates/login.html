@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesion - Biblioteca Digital</title>
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+</head>
+
+<body>
+    <!-- Fondo 3D -->
+    <div id="canvas-container"></div>
+
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-book-open"></i></div>
+            <h2>Biblioteca Digital</h2>
+            <p class="subtitle">Sistema de Gestion de Libros</p>
+        </div>
+
+        <!-- Mensajes -->
+        <div th:if="${param.error}" class="message error">
+            <i class="fas fa-exclamation-circle"></i> Usuario o contrasena incorrectos
+        </div>
+
+        <!-- Mensaje de logout oculto, usamos notificacion toast en su lugar -->
+        <div th:if="${param.logout}" style="display: none;"></div>
+
+        <!-- Formulario de login -->
+        <form th:action="@{/login}" method="post">
+            <div class="input-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" name="username" placeholder="Ingresa tu usuario" required autofocus>
+                <span class="icon"><i class="fas fa-user"></i></span>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Contrasena</label>
+                <input type="password" id="password" name="password" placeholder="Ingresa tu contrasena" required>
+                <span class="icon"><i class="fas fa-lock"></i></span>
+            </div>
+
+            <button type="submit">Iniciar Sesion</button>
+        </form>
+
+        <p class="info-text">
+            Accede a tu cuenta para explorar nuestro catalogo de libros
+        </p>
+
+        <div class="link">
+            <a th:href="@{/registro}">¿No tienes cuenta? Registrate aqui <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script th:src="@{/js/background-3d.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        // Detectar si viene de logout
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (urlParams.has('logout')) {
+                setTimeout(() => {
+                    showToast('success', 'Sesion Cerrada', 'Has cerrado sesion correctamente. Hasta pronto!');
+                }, 300);
+            }
+        });
+    </script>
+</body>
+
+</html>

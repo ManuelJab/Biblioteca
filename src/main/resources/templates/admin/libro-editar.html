@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Libro</title>
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <style>
+        .icon-edit::before {
+            content: "✏️";
+            font-size: 40px;
+        }
+
+        .icon-edit {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
+        }
+
+        h2 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 5px 20px rgba(79, 172, 254, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 15px 40px rgba(79, 172, 254, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <div class="header">
+            <div class="icon icon-edit"></div>
+            <h2>Editar Libro</h2>
+            <p class="subtitle">Actualiza la informacion del libro</p>
+        </div>
+
+        <form th:action="@{/admin/libros/editar/{id}(id=${libro.id})}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>📖 Titulo</label>
+                <input type="text" name="titulo" th:value="${libro.titulo}" required>
+            </div>
+
+            <div class="form-group">
+                <label>✍️ Autor</label>
+                <input type="text" name="autor" th:value="${libro.autor}" required>
+            </div>
+
+            <div class="form-group">
+                <label>🔢 ISBN</label>
+                <input type="text" name="isbn" th:value="${libro.isbn}" required>
+            </div>
+
+            <div class="form-group">
+                <label>📚 Ejemplares Disponibles</label>
+                <input type="number" name="ejemplaresDisponibles" th:value="${libro.ejemplaresDisponibles}" min="0"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>🖼️ Imagen de Portada (Dejar vacio para mantener actual)</label>
+                <input type="file" name="imagenFile" accept="image/*">
+                <small th:if="${libro.imagenUrl != null}">Imagen actual: <span
+                        th:text="${libro.imagenUrl}"></span></small>
+            </div>
+
+            <div class="form-group">
+                <label>📄 Archivo PDF (Dejar vacio para mantener actual)</label>
+                <input type="file" name="pdfFile" accept="application/pdf">
+                <small th:if="${libro.pdfUrl != null}">PDF actual: <span th:text="${libro.pdfUrl}"></span></small>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn-primary">Actualizar Libro</button>
+                <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

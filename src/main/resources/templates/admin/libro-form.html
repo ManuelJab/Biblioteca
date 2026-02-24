@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Libro</title>
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <style>
+        .icon-add::before {
+            content: "📚";
+            font-size: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <div class="header">
+            <div class="icon icon-add"></div>
+            <h2>Agregar Nuevo Libro</h2>
+            <p class="subtitle">Completa la informacion del libro</p>
+        </div>
+
+        <form th:action="@{/admin/libros/nuevo}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>📖 Titulo</label>
+                <input type="text" name="titulo" placeholder="Ingresa el titulo del libro" required>
+            </div>
+
+            <div class="form-group">
+                <label>✍️ Autor</label>
+                <input type="text" name="autor" placeholder="Ingresa el nombre del autor" required>
+            </div>
+
+            <div class="form-group">
+                <label>🔢 ISBN</label>
+                <input type="text" name="isbn" placeholder="Ingresa el codigo ISBN" required>
+            </div>
+
+            <div class="form-group">
+                <label>📚 Ejemplares Disponibles</label>
+                <input type="number" name="ejemplaresDisponibles" min="0" placeholder="Cantidad de ejemplares" required>
+            </div>
+
+            <div class="form-group">
+                <label>🖼️ Imagen de Portada</label>
+                <input type="file" name="imagenFile" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label>📄 Archivo PDF</label>
+                <input type="file" name="pdfFile" accept="application/pdf">
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn-primary">Guardar Libro</button>
+                <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

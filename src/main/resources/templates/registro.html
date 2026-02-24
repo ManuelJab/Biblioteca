@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Biblioteca Digital</title>
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+</head>
+
+<body>
+    <!-- Fondo 3D -->
+    <div id="canvas-container"></div>
+
+    <div class="registro-container">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-edit"></i></div>
+            <h2>Crear Cuenta</h2>
+            <p class="subtitle">Unete a nuestra biblioteca digital</p>
+        </div>
+
+        <!-- Mensajes de error -->
+        <div th:if="${error}" class="message error" th:text="${error}"></div>
+
+        <!-- Formulario de registro -->
+        <form th:action="@{/registro}" method="post">
+            <div class="input-group">
+                <label for="username">Nombre de Usuario</label>
+                <input type="text" id="username" name="username" placeholder="Elige un nombre de usuario" required
+                    autofocus>
+                <span class="icon"><i class="fas fa-user"></i></span>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Contrasena</label>
+                <input type="password" id="password" name="password" placeholder="Crea una contrasena segura" required
+                    minlength="6">
+                <span class="icon"><i class="fas fa-lock"></i></span>
+            </div>
+
+            <button type="submit">Crear Cuenta</button>
+        </form>
+
+        <p class="info-text">
+            Al registrarte, podras solicitar prestamos de libros y gestionar tu biblioteca personal
+        </p>
+
+        <div class="link">
+            <a th:href="@{/login}"><i class="fas fa-arrow-left"></i> ¿Ya tienes cuenta? Inicia sesion</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script th:src="@{/js/background-3d.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

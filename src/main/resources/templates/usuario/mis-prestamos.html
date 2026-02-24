@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pr&eacute;stamos - Biblioteca Digital</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/usuario.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+
+    <!-- Anime.js y Three.js para animaciones -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <!-- Header profesional -->
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-clipboard-list"></i> Mis Pr&eacute;stamos</h1>
+            <div class="header-actions">
+                <a th:href="@{/usuario/catalogo}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Volver al Cat&aacute;logo
+                </a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesi&oacute;n
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats Summary -->
+        <div class="stats-grid">
+            <div class="stat-card stagger-load">
+                <div class="stat-value" th:text="${#lists.size(prestamos)}">0</div>
+                <div class="stat-label"><i class="fas fa-clipboard-check"></i> Pr&eacute;stamos Activos</div>
+            </div>
+        </div>
+
+        <div class="card stagger-load">
+            <div th:if="${param.exito}" class="message success">
+                <i class="fas fa-check-circle"></i> &iexcl;Pr&eacute;stamo solicitado exitosamente!
+            </div>
+
+            <div class="card-header">
+                <h2><i class="fas fa-book-reader"></i> Historial de Pr&eacute;stamos</h2>
+            </div>
+
+            <div th:if="${#lists.isEmpty(prestamos)}" class="empty-state">
+                <div class="empty-icon"><i class="fas fa-clipboard-list"></i></div>
+                <h3>No tienes pr&eacute;stamos activos</h3>
+                <p>Visita el cat&aacute;logo para solicitar un libro.</p>
+                <a th:href="@{/usuario/catalogo}" class="btn btn-primary" style="margin-top: 1rem;">Ir al
+                    Cat&aacute;logo</a>
+            </div>
+
+            <div class="table-container" th:if="${!#lists.isEmpty(prestamos)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Portada</th>
+                            <th>Libro</th>
+                            <th>Autor</th>
+                            <th>Fecha Pr&eacute;stamo</th>
+                            <th>Fecha Devoluci&oacute;n</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="prestamo : ${prestamos}">
+                            <td th:text="${prestamo.id}"></td>
+                            <td>
+                                <img th:if="${prestamo.libro.imagenUrl != null and !prestamo.libro.imagenUrl.isEmpty()}"
+                                    th:src="@{${prestamo.libro.imagenUrl}}" alt="Portada"
+                                    style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div th:if="${prestamo.libro.imagenUrl == null or prestamo.libro.imagenUrl.isEmpty()}"
+                                    style="width: 40px; height: 60px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #aaa;">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                            </td>
+                            <td th:text="${prestamo.libro.titulo}" style="font-weight: 500;"></td>
+                            <td th:text="${prestamo.libro.autor}"></td>
+                            <td th:text="${#temporals.format(prestamo.fechaPrestamo, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(prestamo.fechaDevolucion, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <span class="status-badge status-available" th:text="${prestamo.estado}"></span>
+                            </td>
+                            <td style="display: flex; gap: 0.5rem;">
+                                <a th:href="@{/usuario/leer/{id}(id=${prestamo.libro.id})}" class="btn btn-primary"
+                                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; text-decoration: none;">
+                                    <i class="fas fa-book-open"></i> Leer
+                                </a>
+                                <form th:action="@{/usuario/prestamos/devolver/{id}(id=${prestamo.id})}" method="post">
+                                    <button type="submit" class="btn btn-danger"
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                                        <i class="fas fa-undo"></i> Devolver
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/js/background-3d.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Efecto scroll encabezado
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('.header');
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+
+            // Animacion escalonada para tarjetas
+            anime({
+                targets: '.stagger-load',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(50),
+                easing: 'easeOutCubic',
+                duration: 500
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: biblioteca-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Configuracion para conectar al contenedor 'db'
+      - DB_URL=jdbc:postgresql://db:5432/biblioteca_db
+      - DB_USER=biblioteca_user
+      - DB_PASSWORD=biblioteca_pass
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15-alpine
+    container_name: biblioteca-db
+    environment:
+      - POSTGRES_DB=biblioteca_db
+      - POSTGRES_USER=biblioteca_user
+      - POSTGRES_PASSWORD=biblioteca_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U biblioteca_user -d biblioteca_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
